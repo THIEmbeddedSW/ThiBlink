@@ -14,16 +14,28 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 CharacterDisplayRenderer renderer(new LiquidCrystalAdapter(&lcd, 16, 2), 16, 2);
 LcdMenu menu(renderer);
 
+volatile bool event = false;
+
+ISR (PCINT1_vect){ // PCINT1_vect: interrupt vector for PCINT[14:8]
+    digitalWrite(13, HIGH); // switch LCD on
+    lcd.setCursor(0,1);
+	lcd.print("On ");
+    Serial.println("Interrupt on pin A0!");
+}
 
 void setup()
 {
     pinMode(13, OUTPUT); // initialize LED digital pin as an output
-	pinMode(14, INPUT);  // initialize Switch pin of Display Keypad as input
+	pinMode(14, INPUT_PULLUP);  // initialize Switch pin of Display Keypad as input
     
+    PCICR = (1<<PCIE1);   // enable PCINT[14:8] interrupts
+    PCMSK1 = (1<<PCINT8); // A0 = PCINT8
+    EICRA = (1<<ISC11);   // falling egde only
+
     Serial.begin(9600);  // we need the serial line for debugging
 
-   renderer.begin();
-   lcd.clear();
+    renderer.begin();
+    lcd.clear();
 
     // Some hello text
     lcd.setCursor(0,0);
