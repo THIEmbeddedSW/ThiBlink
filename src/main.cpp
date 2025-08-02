@@ -37,8 +37,8 @@ void loop()
 	lcd.setCursor(0,1);
 	lcd.print("On ");
 
-    // wait for 500ms
-    delay(500);
+    // wait for 1s
+    delay(1000);
 
     // turn LED off, if switch is not pressed (i.e. if PIN is high), put info on LCD
     if (digitalRead(14)) 
@@ -49,6 +49,6 @@ void loop()
     }
     Serial.println("digital input: " + String(digitalRead(14)));
 
-    // wait for 500ms, 
-    delay(500);
+    // wait for 1s, 
+    delay(1000);
 }
