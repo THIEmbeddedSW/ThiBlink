@@ -25,14 +25,14 @@ ISR (PCINT1_vect){ // PCINT1_vect: interrupt vector for PCINT[14:8]
 
 void setup()
 {
-    pinMode(13, OUTPUT); // initialize LED digital pin as an output
-	pinMode(14, INPUT_PULLUP);  // initialize Switch pin of Display Keypad as input
+    pinMode(LED_BUILTIN, OUTPUT); // initialize LED digital pin as an output
+	pinMode(PIN_A0, INPUT_PULLUP);  // initialize Switch pin of Display Keypad as input
     
     PCICR = (1<<PCIE1);   // enable PCINT[14:8] interrupts
     PCMSK1 = (1<<PCINT8); // A0 = PCINT8
     EICRA = (1<<ISC11);   // falling egde only
 
-    Serial.begin(9600);  // we need the serial line for debugging
+    Serial.begin(115200);  // we need the serial line for debugging
 
     renderer.begin();
     lcd.clear();
