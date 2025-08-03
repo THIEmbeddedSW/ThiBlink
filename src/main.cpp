@@ -49,7 +49,7 @@ ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
     } 
     else // LED is on
     {
-        if (digitalRead(A0)) 
+        if (digitalRead(A0) == HIGH) 
         {
             digitalWrite(13, LOW);
             lcd.setCursor(0,1);
