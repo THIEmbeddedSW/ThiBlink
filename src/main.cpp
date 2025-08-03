@@ -19,6 +19,7 @@ volatile int lastValidState = HIGH;
 volatile unsigned long lastInterrupt = 0;
 const unsigned long debounceTime = 20;
 
+// pin change interrupt
 ISR (PCINT1_vect){ // PCINT1_vect: interrupt vector for PCINT[14:8]
     if((millis() - lastInterrupt) > debounceTime){           
         if( (digitalRead(A0) == LOW) && (lastValidState == HIGH) ){
@@ -36,14 +37,47 @@ ISR (PCINT1_vect){ // PCINT1_vect: interrupt vector for PCINT[14:8]
     }
 }
 
+//timer1 interrupt
+ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
+{
+    // turn the LED on (HIGH is the voltage level), put info on LCD
+    if (digitalRead(13) == LOW) // LED is off
+    {
+        digitalWrite(13, HIGH);
+	    lcd.setCursor(0,1);
+	    lcd.print("On ");
+    } 
+    else // LED is on
+    {
+        if (digitalRead(A0)) 
+        {
+            digitalWrite(13, LOW);
+            lcd.setCursor(0,1);
+            lcd.print("Off");
+        }
+    }
+    Serial.println("digital input: " + String(digitalRead(14)));
+}
+
+// initialization
 void setup()
 {
     pinMode(13, OUTPUT); // initialize LED digital pin as an output
 	pinMode(A0, INPUT_PULLUP);  // initialize Switch pin of Display Keypad as input
     
+    // initialize pin-change interrupt
     PCICR = (1<<PCIE1);   // enable PCINT[14:8] interrupts
     PCMSK1 = (1<<PCINT8); // A0 = PCINT8
     EICRA = (1<<ISC11);   // falling egde only
+
+	// initialize timer1 interrupt to 1s
+	TCCR1A = 0;
+	TCCR1B = 0;
+	TCNT1  = 0;
+	OCR1A = 62500;            // compare match register to trigger every 1s
+	TCCR1B |= (1 << WGM12);   // CTC mode
+	TCCR1B |= (1 << CS12) | (0 << CS11) | (0 >> CS10); //Prescale auf 256 -> frequency 16MHz/256 = 62500 Hz
+	TIMSK1 |= (1 << OCIE1A);  // enable timer compare interrupt
 
     Serial.begin(115200);  // we need the serial line for debugging
 
@@ -55,25 +89,8 @@ void setup()
 	lcd.print("THI Experiment");
 }
 
+// endless loop
 void loop()
 {
-    // turn the LED on (HIGH is the voltage level), put info on LCD
-    digitalWrite(13, HIGH);
-	lcd.setCursor(0,1);
-	lcd.print("On ");
-
-    // wait for 1s
-    delay(1000);
-
-    // turn LED off, if switch is not pressed (i.e. if PIN is high), put info on LCD
-    if (digitalRead(A0)) 
-    {
-        digitalWrite(13, LOW);
-        lcd.setCursor(0,1);
-	    lcd.print("Off");
-    }
-    Serial.println("digital input: " + String(digitalRead(14)));
-
-    // wait for 1s, 
-    delay(1000);
+    // nothing to do; everything happens in the interrupts.
 }
