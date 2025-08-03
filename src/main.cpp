@@ -14,19 +14,32 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 CharacterDisplayRenderer renderer(new LiquidCrystalAdapter(&lcd, 16, 2), 16, 2);
 LcdMenu menu(renderer);
 
-volatile bool event = false;
+volatile u8 counter = 0;
+volatile int lastValidState = HIGH;
+volatile unsigned long lastInterrupt = 0;
+const unsigned long debounceTime = 20;
 
 ISR (PCINT1_vect){ // PCINT1_vect: interrupt vector for PCINT[14:8]
-    digitalWrite(13, HIGH); // switch LCD on
-    lcd.setCursor(0,1);
-	lcd.print("On ");
-    Serial.println("Interrupt on pin A0!");
+    if((millis() - lastInterrupt) > debounceTime){           
+        if( (digitalRead(A0) == LOW) && (lastValidState == HIGH) ){
+            digitalWrite(13, HIGH); // switch LCD on
+            lcd.setCursor(0,1);
+	        lcd.print("On ");
+            lastValidState = LOW;
+            counter++;
+            Serial.println(String(counter) + " Interrupts on pin A0!");
+        }
+        else {
+            lastValidState = HIGH;
+        }
+        lastInterrupt = millis();
+    }
 }
 
 void setup()
 {
     pinMode(13, OUTPUT); // initialize LED digital pin as an output
-	pinMode(14, INPUT_PULLUP);  // initialize Switch pin of Display Keypad as input
+	pinMode(A0, INPUT_PULLUP);  // initialize Switch pin of Display Keypad as input
     
     PCICR = (1<<PCIE1);   // enable PCINT[14:8] interrupts
     PCMSK1 = (1<<PCINT8); // A0 = PCINT8
@@ -53,7 +66,7 @@ void loop()
     delay(1000);
 
     // turn LED off, if switch is not pressed (i.e. if PIN is high), put info on LCD
-    if (digitalRead(14)) 
+    if (digitalRead(A0)) 
     {
         digitalWrite(13, LOW);
         lcd.setCursor(0,1);
